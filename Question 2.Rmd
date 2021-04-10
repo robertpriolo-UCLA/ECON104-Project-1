@@ -30,6 +30,7 @@ attach(vegas5)
 
 #libraries
 library(broom)
+library(stargazer)
 
 ```
 
@@ -44,9 +45,19 @@ interpretation of your estimates.
 
 ```{r}
 
-model<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
-summary(model)
-tidy(model)
+model.lm<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
+
+
+#testing against GLM model due to negative coef
+model.glm<- glm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
+
+
+stargazer(model.lm, model.glm,
+          type = "text", 
+          column.labels = c("LM", "GLM"),
+          model.names=FALSE, dep.var.labels.include=FALSE,
+          dep.var.caption	=c("models"), digits=5
+          )
 
 ```
 Insignificant variables: arm, term30, amount
