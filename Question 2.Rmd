@@ -49,7 +49,7 @@ model.lm<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico
 
 
 #testing against GLM model due to negative coef
-model.glm<- glm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
+model.glm<- glm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico, family = "binomial")
 
 
 stargazer(model.lm, model.glm,
