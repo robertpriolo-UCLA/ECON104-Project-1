@@ -48,10 +48,14 @@ interpretation of your estimates.
 model.lm<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
 
 
-#testing against GLM model due to negative coef
+#testing against GLM model due to binomial coef
 model.glm<- glm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico, family = "binomial")
 
+#standard model summaries
+summary(model.lm)
+summary(model.glm)
 
+#stargazer quick comparison
 stargazer(model.lm, model.glm,
           type = "text", 
           column.labels = c("LM", "GLM"),
