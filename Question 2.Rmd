@@ -9,6 +9,30 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+#initial setup
+rm(list=ls())
+t.critical <- function(alpha, df, tail = "two") {
+  if(tail == "two"){
+    result <- qt(1-alpha/2  , df)
+  } else if(tail == "right"){
+    result <- qt(1-alpha  , df)
+  } else if(tail=="left"){
+    result <- qt(alpha  , df)
+  }
+  return(result)
+}
+
+#data
+library(POE5Rdata)
+data("vegas5")
+attach(vegas5)
+
+#libraries
+library(broom)
+
+```
+
 
 
 #Question 2
