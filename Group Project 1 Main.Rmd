@@ -1,0 +1,153 @@
+---
+title: "Econ 104 Group Project 1"
+author: "Robert Priolo"
+date: "4/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls())
+t.critical <- function(alpha, df, tail = "two") {
+  if(tail == "two"){
+    result <- qt(1-alpha/2  , df)
+  } else if(tail == "right"){
+    result <- qt(1-alpha  , df)
+  } else if(tail=="left"){
+    result <- qt(alpha  , df)
+  }
+  return(result)
+}
+library(POE5Rdata)
+data("vegas5")
+attach(vegas5)
+
+library(broom)
+```
+
+
+#Question 1
+
+Provide a descriptive analysis of your variables. This should include histograms and fitted
+distributions, correlation plot, boxplots, scatterplots, and statistical summaries (e.g., the
+five-number summary). All figures must include comments.
+```{r}
+# Obs: 10,000 mortgage loan observations from Las Vegas, Nevada, single family homes, 2010
+# 
+# The authors would like to thank Meagan McCollum, Department of Finance, Louisiana State University for
+# providing the data.
+# 
+# default         = 1 if payment late by 90+ days
+# arm             = 1 if adjustable rate mortgage, 0 if fixed
+# refinance       = 1 if loan is for a refinance of any type, 0 if for purchase
+# lien2           = 1 if 2nd lien mortage, 0 if 1st lien
+# term30          = 1 if 30 year mortgage, 0 if 15 year mortgage
+# underwater      = 1 if borrower estimated to owe more than property worth at time of obs., 0 oth
+# ltv             loan to value ratio of property at origination, percent
+# rate            current interest rate on loan, percent
+# amount          loan amount in $10,000 units
+# fico            borrower's credit score at origination
+# 
+#     Variable |       Obs        Mean    Std. Dev.       Min        Max
+# -------------+--------------------------------------------------------
+#      default |     10000       .3699    .4828015          0          1
+#          arm |     10000       .3783    .4849872          0          1
+#    refinance |     10000       .5451    .4979867          0          1
+#        lien2 |     10000       .1035     .304626          0          1
+#       term30 |     10000       .8535    .3536245          0          1
+# -------------+--------------------------------------------------------
+#   underwater |     10000       .8228     .381857          0          1
+#          ltv |     10000    69.25543    21.03323          5        109
+#         rate |     10000    5.979238    2.063461         .5     17.375
+#       amount |     10000    24.56128    20.69574     1.0948        750
+#         fico |     10000    684.7314    66.11495        442        823
+
+
+hist(default)
+hist(arm)
+hist(refinance)
+hist(lien2)
+hist(term30)
+hist(underwater)
+hist(ltv)
+hist(rate)
+hist(amount)
+hist(fico)
+
+
+```
+
+
+#Question 2
+
+Estimate a multiple linear regression model that includes all the main effects only (i.e., no
+interactions nor higher order terms). We will use this model as a baseline. Comment on
+the statistical and economic significance of your estimates. Also, make sure to provide an
+interpretation of your estimates.
+
+```{r}
+
+model<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
+summary(model)
+tidy(model)
+
+```
+Insignificant variables: arm, term30, amount
+
+Arm: interesting that arm is not significant since my intuition is that people
+who obtain an arm loan with a lower initial payment would cause higher defaults
+if the arm causes mortgage payments to increase from its initial value
+
+term30: may be insignificant for a few reasons. First, the amount of records
+with 15 years is low compared the entire data set. Second, borrowers with 15 year
+loans may be more financially fit than 30 year borrowers. Third, the borrow can
+refinance to a 30 years to lower payments if needed.
+
+amount: I am surprised amount is insignificant as my intuition would be borrowers
+with high loan amounts would have a higher likelihood to default
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
