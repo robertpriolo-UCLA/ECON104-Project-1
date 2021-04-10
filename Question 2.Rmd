@@ -1,0 +1,40 @@
+---
+title: "Question 2"
+author: "Robert Priolo"
+date: "4/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+#Question 2
+
+Estimate a multiple linear regression model that includes all the main effects only (i.e., no
+interactions nor higher order terms). We will use this model as a baseline. Comment on
+the statistical and economic significance of your estimates. Also, make sure to provide an
+interpretation of your estimates.
+
+```{r}
+
+model<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
+summary(model)
+tidy(model)
+
+```
+Insignificant variables: arm, term30, amount
+
+Arm: interesting that arm is not significant since my intuition is that people
+who obtain an arm loan with a lower initial payment would cause higher defaults
+if the arm causes mortgage payments to increase from its initial value
+
+term30: may be insignificant for a few reasons. First, the amount of records
+with 15 years is low compared the entire data set. Second, borrowers with 15 year
+loans may be more financially fit than 30 year borrowers. Third, the borrow can
+refinance to a 30 years to lower payments if needed.
+
+amount: I am surprised amount is insignificant as my intuition would be borrowers
+with high loan amounts would have a higher likelihood to default
