@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+#initial setup
 rm(list=ls())
 t.critical <- function(alpha, df, tail = "two") {
   if(tail == "two"){
@@ -21,11 +22,15 @@ t.critical <- function(alpha, df, tail = "two") {
   }
   return(result)
 }
+
+#data
 library(POE5Rdata)
 data("vegas5")
 attach(vegas5)
 
+#libraries
 library(broom)
+
 ```
 
 
@@ -94,6 +99,8 @@ model<- lm(default~arm+refinance+lien2+term30+underwater+ltv+rate+amount+fico)
 summary(model)
 tidy(model)
 
+
+
 ```
 Insignificant variables: arm, term30, amount
 
@@ -108,7 +115,6 @@ refinance to a 30 years to lower payments if needed.
 
 amount: I am surprised amount is insignificant as my intuition would be borrowers
 with high loan amounts would have a higher likelihood to default
-
 
 
 
