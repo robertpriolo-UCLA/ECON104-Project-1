@@ -28,9 +28,16 @@ library(POE5Rdata)
 data("vegas5")
 attach(vegas5)
 
-#libraries
-library(broom)
-library(stargazer)
+#Libraries
+library(POE5Rdata)
+library(dynlm) #for the `dynlm()` function
+library(broom) #for `glance(`) and `tidy()`
+library(lmtest) #bgtest()
+library(stargazer) #stargazer()
+library(knitr) #kable()
+library(sandwich) #coeftest()
+library(car) #deltamethod
+library(forecast) #forecast()
 
 ```
 
