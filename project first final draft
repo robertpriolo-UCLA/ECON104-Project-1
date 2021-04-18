@@ -1,11 +1,11 @@
 ---
-title: "Project 1"
-author: "Group"
-date: "Spring 2021"
+title: "Project 1 - Data Science for Economists"
+author: "Lin, Oliver; Nazarov, Nazar; Priolo, Robert"
+date: "Professor Rojas - Spring 2021"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
  
 ```{r}
@@ -100,7 +100,7 @@ a1 <- vegas5 %>% filter(amount < median(amount)) %>% ggplot(aes(x = amount)) +
   aes(y = stat(count)/sum(stat(count))) +
   scale_y_continuous(labels=scales::percent) +
   ylab("Frequency (%)") +
-  xlab("Amount (10K)") +
+  xlab("Amount (100K)") +
   facet_wrap(~refinance,
              labeller = labeller(refinance = c(`0`="loans for purchase",
                                                `1`="loans for refinance"))) +
@@ -110,7 +110,7 @@ a1 <- vegas5 %>% filter(amount < median(amount)) %>% ggplot(aes(x = amount)) +
 a2 <- vegas5 %>% filter(amount > median(amount) & amount < 180) %>% ggplot(aes(x = amount)) +
   geom_histogram( colour = "black", fill = "steelblue") +
   aes(y = stat(count)/sum(stat(count))) +
-  scale_y_continuous(labels=scales::percent) + xlab("Amount (10K)") +
+  scale_y_continuous(labels=scales::percent) + xlab("Amount (100K)") +
   ylab("Frequency(%)") + facet_wrap(~refinance,
                          labeller = labeller(refinance = c(`0`="loans for purchase",
                                                            `1`="loans for refinance"))) +
@@ -282,7 +282,7 @@ stargazer(model.lm, model.glm,
 ```
 Insignificant variables: arm, term30, amount
  
-Arm: interesting that arm is not significant since my intuition is that people
+Arm: interesting that arm is not significant since our intuition is that people
 who obtain an arm loan with a lower initial payment would cause higher defaults
 if the arm causes mortgage payments to increase from its initial value
  
@@ -291,7 +291,7 @@ with 15 years is low compared the entire data set. Second, borrowers with 15 yea
 loans may be more financially fit than 30 year borrowers. Third, the borrow can
 refinance to a 30 years to lower payments if needed.
  
-amount: I am surprised amount is insignificant as my intuition would be borrowers
+amount: we are surprised that amount is insignificant as my intuition would be borrowers
 with high loan amounts would have a higher likelihood to default
  
 # Question 3
@@ -345,7 +345,7 @@ ols_plot_dffits(model.lm)
  
 # Question 4
  
-Based on the output in the table above, lm regression makes more sense, since if we set all the variables to zero, the probability of default equals 0.50, which is equivalent to a flip of a coin. This, intuitively, makes more sense, as it adds more randomness to the event and also because probabilites are positive values in the interval between (0,1). Therefore, we will be using the lm model to answer questions that follow.
+Based on the output in the table above, lm regression makes more sense, since if we set all the variables to zero, the probability of default equals 0.50, which is equivalent to a flip of a coin. This, intuitively, makes more sense, as it adds more randomness to the event and also because probabilities are positive values in the interval between (0,1). Therefore, we will be using the lm model to answer questions that follow.
  
  
 ```{r}
@@ -368,7 +368,7 @@ Boruta.res <- Boruta(default~.,
 plot(Boruta.res)
 attStats(Boruta.res)[order(-attStats(Boruta.res)$meanImp),]
 ```
-It looks like mallows CP prefers 7 predictor variables since, they are: arm, refinance, lien2, underwater,ltv,rate,fico. In addition, based on Boruta's importance plot, lien2 is rejected as a predictor variable. Hence, we'll trust Boruta that performed 777 max runs and proceed to estimate a model without lien2.
+It looks like mallows CP prefers 7 predictor variables, they are: arm, refinance, lien2, underwater,ltv,rate,fico. In addition, based on Boruta's importance plot, lien2 is rejected as a predictor variable. Hence, we'll trust Boruta that performed 777 max runs and proceed to estimate a model without lien2.
  
 # Question 5
  
@@ -395,7 +395,7 @@ qqPlot(updated.lm)
  
  
 ```
-Again, nothing too suspicious. QQplot confirms our residual plot as well, and our observations almost perfectly follow a logistic curve.
+Again, nothing too suspicious. QQplot reveals that our observations follow a logistic curve.
  
 # Question 7
  
@@ -411,55 +411,61 @@ Based on the results, we need to consider including higher-order terms.
 ```{r}
 
 #accounting for heteroskedasticity 
-suppressMessages(library(estimatr))
+
 bptest(updated.lm)
- 
-updated.lm.robust <- lm_robust(default~arm+refinance+term30+underwater+ltv+rate+log(amount)+fico,
-              data = vegas5,
-              se_type = "HC1")
-bptest(updated.lm.robust)
 
- 
-p <- fitted(updated.lm.robust)
+p <- fitted(updated.lm)
 p[p<0.01] <- 0.01 #truncating probabilities that don't fall in (0,1) interval
 p[p>0.99] <- 0.99
 sigma.sq <- p*(1-p)
 weight <- 1/sigma.sq
  
-updated.lm.robust.trunc <- lm_robust(default~arm+refinance+term30+underwater+ltv+rate+log(amount)+fico, #re-estimating the model
-              data = vegas5,
-              se_type = "HC1",
-              weights = weight)
-bptest(updated.lm.robust.trunc)
-
-summary(updated.lm.robust.trunc)
+updated.lm.fgls <- lm(default~arm+refinance+term30+underwater+ltv+rate+amount+fico, #re-estimating the model
+              data = vegas5, weights = weight)
+bptest(updated.lm.fgls)
+summary(updated.lm.fgls)
+kable(tidy(updated.lm.fgls), caption = "Updated Linear Model-GLS with Boruta-selected Variables")
 
 
-#removing variables
+#we believe we can do better in terms of coefficient significance
+p1 <- fitted(updated.lm)
+p1[p1 < 0.01 | p1 > 0.99] <- NA
+sigsq <- p1*(1-p1)
+w <- 1/sigsq
 
-updated.lm.robust <- lm_robust(default~refinance+term30+underwater+ltv+rate+log(amount)+fico,
-              data = vegas5,
-              se_type = "HC1")
-bptest(updated.lm.robust)
+updated.lm.fgls.omit <- lm(default~arm+refinance+term30+underwater+ltv+rate+amount+fico, #re-estimating the model
+              data = vegas5, weights = w)
 
- 
-p <- fitted(updated.lm.robust)
-p[p<0.01] <- 0.01 #truncating probabilities that don't fall in (0,1) interval
-p[p>0.99] <- 0.99
-sigma.sq <- p*(1-p)
-weight <- 1/sigma.sq
- 
-updated.lm.robust.trunc <- lm_robust(default~refinance+underwater+ltv+rate+log(amount)+fico, #re-estimating the model
-              data = vegas5,
-              se_type = "HC1",
-              weights = weight)
-bptest(updated.lm.robust.trunc)
+summary(updated.lm.fgls.omit) #much better
+kable(tidy(updated.lm.fgls.omit), 
+      caption = "Linear GLS Model with Truncated Fitted Values") #this is the model we will keep
 
-resettest(updated.lm.robust.trunc, power = 2, type = "regressor")
+#linear hypothesis test indicates that we reject H0
+linearHypothesis(updated.lm.fgls.omit, 
+                 hypothesis.matrix = c("term30", 
+                                       "arm", 
+                                       "amount"))
+#here, linear hypothesis test shows that arm = 0
+linearHypothesis(updated.lm.fgls.omit, 
+                 hypothesis.matrix = c("arm"))
 
-summary(updated.lm.robust.trunc)
+
+#to summarize
+stargazer(model.lm, model.glm, updated.lm, updated.lm.fgls, updated.lm.fgls.omit,
+          type = "text",
+          model.names=F, digits=3,
+          intercept.bottom = F, 
+          column.labels = c("OLS", "Logistic", 
+                            "Boruta-chosen OLS", 
+                            "OLS GLS", 
+                            "OLS GLS-Omit"), 
+          dep.var.caption = "Probability of Default", 
+          dep.var.labels.include = F, 
+          selection.equation = T)
+
 
 ```
+
  
 Based on the Breusch-Pagan Test, heteroskedasticity is present as expected. After removing the variables that are not statistically significant, we are confident that our estimates for the coefficients are unbiased. By applying Heteroskedasticity-Consistent standard errors and feasible generalized least squares, we have accounted for heteroskedasticity.  And as \(n\rightarrow\infty\) our standard errors, t-tests, interval estimates are valid in large samples. 
 
@@ -469,71 +475,47 @@ Based on the Breusch-Pagan Test, heteroskedasticity is present as expected. Afte
 
 ```{r}
 
-#re-estimating the model
-updated.lm.robust.trunc <- lm_robust(default~refinance+underwater+ltv+I(ltv^2)+rate+amount+fico, 
-              data = vegas5,
-              se_type = "HC1",
-              weights = weight)
-summary(updated.lm.robust.trunc)
+
+options(digits=3)
+lm.interaction <- lm(default~refinance+term30+underwater+ltv+rate*arm+amount+
+                    fico, #re-estimating the model
+              data = vegas5)
+
+summary(lm.interaction) #seems a much better model compared to others
 
 
-BIC(model.lm)
-BIC(model.glm)
+b1 = BIC(model.lm)
+b2 = BIC(model.glm)
+b3 = BIC(updated.lm)
+b4 = BIC(updated.lm.fgls)
+b5 = BIC(updated.lm.fgls.omit)
+b6 = BIC(lm.interaction)
 
+c1 = AIC(model.lm)
+c2 = AIC(model.glm)
+c3 = AIC(updated.lm)
+c4 = AIC(updated.lm.fgls)
+c5 = AIC(updated.lm.fgls.omit)
+c6 = AIC(lm.interaction)
 
-AIC(model.lm)
-AIC(model.glm)
+v1 = c(b1,b2,b3,b4,b5,b6)
+v2 = c(c1,c2,c3,c4,c5,c6)
+df = cbind(v1,v2)
 
-
+colnames(df) = c("BIC", "AIC")
+rownames(df) = c("OLS", "Logistic", 
+                            "Boruta-chosen OLS", 
+                            "OLS GLS", 
+                            "OLS GLS-Omit", 
+                            "OLS Interaction")
+kable(df)          
 
 ```
 
-To retain best interpretability, we will now proceed with lm model where we will also apply FGLS. In terms of AIC and BIC, model.glm has the lowest AIC and BIC.
+We have finally attained a better model where include an interaction term as well. It seems as though there is no need for any higher power terms, the model has been constructed with all terms being statistically significant, by adding higher power terms, we lose that significance. We will now proceed to apply cross-validation.
 
 
-
-```{r}
-
-model.lm <- lm(default~arm+refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-              data = vegas5)
-summary(model.lm)
-p <- fitted(model.lm)
-p[p<0.01] <- 0.01 #truncating probabilities that don't fall in (0,1) interval
-p[p>0.99] <- 0.99
-sigma.sq <- p*(1-p)
-weight <- 1/sigma.sq
-
-model.lm.fgls <- lm(default~arm+refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-              data = vegas5, 
-              weights = weight)
-summary(model.lm.fgls)
-
-#we will now remove arm to finalize our model, arm is not statistically
-# significant
-
-model.lm <- lm(default~refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-              data = vegas5)
-summary(model.lm)
-p <- fitted(model.lm)
-p[p<0.01] <- 0.01 #truncating probabilities that don't fall in (0,1) interval
-p[p>0.99] <- 0.99
-sigma.sq <- p*(1-p)
-weight <- 1/sigma.sq
-
-model.lm.fgls <- lm(default~refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-              data = vegas5, 
-              weights = weight)
-summary(model.lm.fgls)
-
-options(digits = 5)
-kable(tidy(model.lm.fgls)) #much better
-
-
-
-```
-
-Now, since we attained our best lm model, we will apply cross-validation.
-
+# Question 10
 
 ```{r}
 set.seed(123)
@@ -543,40 +525,36 @@ test_set <- vegas5[-row.number,]
 dim(training_set)
 
 
-model.lm.1 <- lm(default~refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-              data = training_set)
-summary(model.lm.1)
-p <- fitted(model.lm.1)
-p[p<0.01] <- 0.01 #truncating probabilities that don't fall in (0,1) interval
-p[p>0.99] <- 0.99
-sigma.sq <- p*(1-p)
-weight1 <- 1/sigma.sq
-
-model.lm.fgls.1 <- lm(default~refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-              data = training_set, 
-              weights = weight1)
-summary(model.lm.fgls.1)
-plot(model.lm.fgls.1)
-
-
 #calculating RMSE
-sqrt(mean((training_set$default-predict(model.lm.fgls.1,training_set))^2)) 
+sqrt(mean((training_set$default-predict(lm.interaction,training_set))^2)) 
 #the predicted value is off by 0.45747
 
-sqrt(mean((test_set$default-predict(model.lm.fgls.1,test_set))^2)) 
+sqrt(mean((test_set$default-predict(lm.interaction,test_set))^2)) 
 #on average the predicted value is off by 0.45011
 
 suppressMessages(library(lmvar))
-fit <- lm(default~refinance+lien2+underwater+ltv+rate+log(amount)+fico,
-          data = vegas5, 
-              weights = weight, 
+fit <- lm(default~refinance+term30+underwater+ltv+rate*arm+amount+
+                    fico,
+              data = vegas5, 
           x = TRUE, 
           y = TRUE)
           
 cv.lm(fit, k = 10)
-#RMSE 0.41451
+#RMSE 0.4550
 
 ```
 
+# Question 11
+
+Based on simple linear regression models we created, there are several variables which initially seem relevant to the default rate turned out to be statistically insignificant. They include the adjustable rate mortgage (arm), 30-year vs. 15-year mortgage, amount. Through removing outlier data points and transformation we eventually created models with higher order. We also omitted terms that seem to be irrelevant to the default rate, and finally we were able to include interaction terms. One interesting finding is that when we include interactions, term30 and arm became statistically significant, therefore for completeness, we decided to retain term30 and arm as predictor variables. And our conclusions is the following: 
+Lien2 and amount are not statistically significant as predictor variables;
+Refinancing loans have a slightly lower chance of default; 
+30-year mortgages have slightly lower change of default;
+Underwater mortgages have a higher default rate; 
+Adjustable rate mortgages have higher default rate; 
+LTV is positively correlated with default rate, specifically 1% increase in LTV ratio is correlated to 0.0033% increase in default rate;
+The mortgage rate is positively correlated with default rate, 1% increase in the mortgage rate can lead to 0.0355% increase in default rate; 
+Although the amount of the loan does not seem to have significant correlation with the default rate, we did find a positive correlation between default rate and the interaction between amount and mortgage rate. 1% increase in the product of amount and rate is expected to increase  0.0184% increase in default rate; 
+Finally, there is also an expected negative correlation between FICO scores and the default rate, for an extra point increase in FICO is translated to 0.00112% decrease in default rate. 
 
 
