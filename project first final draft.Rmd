@@ -9,7 +9,7 @@ output:
 ---
  
 ```{r}
- 
+
 options(digits = 2)
  
 suppressMessages(library(POE5Rdata))
