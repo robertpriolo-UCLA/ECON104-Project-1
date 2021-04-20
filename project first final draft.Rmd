@@ -344,6 +344,8 @@ ols_plot_dffits(model.lm)
 ```
  
 # Question 4
+
+
  
 Based on the output in the table above, lm regression makes more sense, since if we set all the variables to zero, the probability of default equals 0.50, which is equivalent to a flip of a coin. This, intuitively, makes more sense, as it adds more randomness to the event and also because probabilities are positive values in the interval between (0,1). Therefore, we will be using the lm model to answer questions that follow.
  
